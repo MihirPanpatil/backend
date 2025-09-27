@@ -7,3 +7,5 @@ pydantic-settings
 python-jose[cryptography]
 requests 
 python-dotenv
+asyncpg
+sqlalchemy[asyncio]

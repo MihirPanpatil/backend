@@ -1,24 +1,38 @@
-# app/db/database.py
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
-from app.core.config import settings
-from app.db.models import Base # Imports the declarative base from models.py
+# app/api/db/database.py
+import asyncio
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, AsyncEngine
+from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy import text
+from app.api.core.config import settings
+from app.api.db.models import Base  # Imports the declarative base from models.py
 
-# Database connection engine
-ENGINE = create_engine(
-    settings.DATABASE_URL,
-    pool_pre_ping=True
+# Create async engine
+ENGINE = create_async_engine(
+    settings.DATABASE_URL,  # Already includes asyncpg in the URL
+    echo=True,  # Set to False in production
+    future=True
 )
 
-# SessionLocal is the class used to create a database session
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=ENGINE)
+# Create async session factory
+AsyncSessionLocal = sessionmaker(
+    bind=ENGINE,
+    class_=AsyncSession,
+    expire_on_commit=False,
+    autoflush=False
+)
 
-# Dependency to yield a database session (used in FastAPI endpoints)
-def get_db():
-    """Provides a database session for a single request."""
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        # Ensures the session is closed after the request is complete
-        db.close()
+# Dependency to get DB session
+async def get_db() -> AsyncSession:
+    """Dependency that provides db session for each request."""
+    async with AsyncSessionLocal() as session:
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+
+async def init_models():
+    """Initialize database models."""
+    async with ENGINE.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)

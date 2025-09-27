@@ -1,4 +1,4 @@
-# app/db/models.py
+# app/api/db/models.py
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, func
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base

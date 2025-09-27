@@ -1,10 +1,10 @@
-# app/core/config.py
+# app/api/core/config.py
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List
 
 class Settings(BaseSettings):
     # Config tells Pydantic to load from .env file
-    model_config = SettingsConfigConfigDict(env_file='.env', extra='ignore')
+    model_config = SettingsConfigDict(env_file='.env', extra='ignore')
 
     # --- Database Settings (PostgreSQL) ---
     DB_HOST: str
@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     @property
     def DATABASE_URL(self) -> str:
         # Uses the app_rw user
-        return f"postgresql+psycopg2://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+        return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
     # --- AWS & S3 Settings ---
     AWS_REGION: str
